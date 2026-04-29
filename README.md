@@ -10,11 +10,9 @@
 
 ### 暗黑模式 (默认)
 ![暗黑模式预览](preview-dark.png) 
-*注：请将你的截图上传并命名为 preview-dark.png，或修改此路径*
 
 ### 明亮模式
 ![明亮模式预览](preview-light.png)
-*注：请将你的截图上传并命名为 preview-light.png，或修改此路径*
 
 ---
 
