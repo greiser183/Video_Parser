@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极简全网视频解析 - 纯净体验</title>
+    
+    <!-- 浏览器标签页图标 (Favicon) - 采用与Logo一致的SVG -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%236366f1'><path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z'/></svg>">
+    
+    <!-- 引用 Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&family=Noto+Sans+SC:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* 默认暗黑模式变量 */
+            --bg-color: #0f172a;
+            --container-bg: rgba(30, 41, 59, 0.85);
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --input-bg: #1e293b;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+            
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+        }
+
+        [data-theme="light"] {
+            /* 明亮模式变量 */
+            --bg-color: #f8fafc;
+            --container-bg: rgba(255, 255, 255, 0.85);
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --input-bg: #ffffff;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.4s, color 0.4s, border-color 0.4s;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            color: var(--text-main);
+        }
+
+        /* 模式切换悬浮按钮 */
+        .theme-toggle {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            cursor: pointer;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            border: 2px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            z-index: 9999;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            background: var(--primary-hover);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            background: var(--container-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 32px;
+            padding: 50px 40px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            position: relative;
+            text-align: center;
+            transition: max-width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .container.is-playing {
+            max-width: 1100px;
+        }
+
+        /* Logo 与 标题同行 */
+        .logo-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .logo-header svg {
+            width: 42px;
+            height: 42px;
+            fill: var(--primary-color);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        /* 输入组布局 */
+        .input-group {
+            display: flex;
+            gap: 12px;
+            background: var(--input-bg);
+            padding: 10px;
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+        }
+
+        .select-wrapper {
+            flex: 3;
+            position: relative;
+            min-width: 160px;
+        }
+
+        .select-wrapper::after {
+            content: "";
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236366f1'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-size: contain;
+            background-repeat: no-repeat;
+            pointer-events: none;
+        }
+
+        select, input {
+            width: 100%;
+            height: 54px;
+            padding: 0 15px;
+            border-radius: 14px;
+            border: 1px solid transparent;
+            background: var(--bg-color);
+            color: var(--text-main);
+            font-size: 0.95rem;
+            outline: none;
+            appearance: none;
+        }
+
+        select { padding-right: 35px !important; cursor: pointer; }
+        input { flex: 5; }
+        input:focus { border-color: var(--primary-color); }
+
+        .btn-play {
+            flex: 1.5;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            height: 54px;
+            border-radius: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-play:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        /* 播放器区域 */
+        .video-wrapper {
+            margin-top: 35px;
+            width: 100%;
+            display: none;
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 */
+            height: 0;
+            background: #000;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 30px 50px rgba(0,0,0,0.5);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            border: none;
+        }
+
+        .support-list {
+            margin-top: 30px;
+            padding: 15px;
+            border-radius: 14px;
+            background: rgba(125, 125, 125, 0.05);
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .support-list span { margin: 0 8px; display: inline-block; }
+
+        footer { margin-top: 40px; font-size: 0.85rem; color: var(--text-muted); text-align: center;}
+        footer a { color: var(--primary-color); text-decoration: none; }
+
+        @media (max-width: 768px) {
+            .container { padding: 40px 20px; }
+            .theme-toggle { bottom: 20px; right: 20px; width: 46px; height: 46px; }
+            .input-group { 
+                flex-direction: column; 
+                background: transparent; 
+                padding: 0; 
+                border: none;
+                gap: 15px; 
+            }
+            .select-wrapper, input, .btn-play { width: 100%; height: 54px; flex: none; }
+        }
+    </style>
+</head>
+<body data-theme="dark">
+
+    <!-- 悬浮模式切换 -->
+    <div class="theme-toggle" onclick="toggleTheme()" id="themeBtn" title="切换显示模式">
+        <svg id="themeIcon" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+    </div>
+
+    <div class="container" id="mainContainer">
+        <header>
+            <div class="logo-header">
+                <!-- 网站 SVG Logo -->
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                </svg>
+                <h1>极简解析</h1>
+            </div>
+            <p>输入视频链接，切换解析接口，开启高清视界</p>
+        </header>
+
+        <div class="input-group">
+            <div class="select-wrapper">
+                <select id="api">
+                    <option value="https://jx.m3u8.tv/jiexi/?url=">M3U8解析 (全能)</option>
+                    <option value="https://www.h8jx.com/jiexi.php?url=">H8解析接口</option>
+                    <option value="https://jx.618g.com/?url=">618G解析接口</option>
+                    <option value="https://im1907.top/?jx=">M1907解析接口</option> 
+                    <option value="https://svip.bljiex.cc/?v=">BL智能解析</option> 
+                    <option value="https://okjx.cc/?url=">OK解析接口</option>
+                    <option value="https://www.ckmov.com/?url=">CKMOV解析接口</option>
+                    <option value="https://www.mtosz.com/erzi.php?url=">MAO解析接口</option>
+                    <option value="https://www.jiexila.com/?url=">云解析接口</option>
+                    <option value="https://www.8090g.cn/jiexi/?url=">8090解析接口</option>
+                    <option value="https://lecurl.cn/?url=">乐乐解析接口</option>
+                    <option value="https://jx.bozrc.com:4433/player/?url=">Parwix解析</option>
+                </select>
+            </div>
+            
+            <input type="text" id="url" placeholder="在此粘贴视频播放页面地址..." />
+            
+            <button class="btn-play" onclick="play()">立即解析</button>
+        </div>
+
+        <div class="video-wrapper" id="videoWrapper">
+            <iframe id="playFrame" allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true" amallowfullscreen="true"></iframe>
+        </div>
+
+        <div class="support-list">
+            <strong>支持网站：</strong>
+            <span>腾讯视频</span><span>爱奇艺</span><span>优酷</span><span>哔哩哔哩</span><span>芒果TV</span><span>搜狐视频</span><span>PP视频</span><span>......</span>
+        </div>
+
+        <footer>
+            本站仅供技术学习交流，不存储任何资源内容。<br>
+            © 2026 <a href="#">极简解析</a>
+        </footer>
+    </div>
+
+    <script>
+        function play() {
+            const api = document.getElementById("api").value;
+            const url = document.getElementById("url").value;
+            const wrapper = document.getElementById("videoWrapper");
+            const frame = document.getElementById("playFrame");
+            const container = document.getElementById("mainContainer");
+
+            if (!url) {
+                alert("请先输入视频链接地址");
+                return;
+            }
+
+            frame.src = api + url;
+            wrapper.style.display = "block";
+            
+            setTimeout(() => {
+                container.classList.add("is-playing");
+                wrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById("themeIcon");
+            const isDark = body.getAttribute("data-theme") !== "light";
+            
+            if (isDark) {
+                body.setAttribute("data-theme", "light");
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>';
+            } else {
+                body.setAttribute("data-theme", "dark");
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>';
+            }
+        }
+
+        document.getElementById("url").addEventListener("keyup", (e) => {
+            if (e.key === "Enter") play();
+        });
+    </script>
+</body>
+</html>
